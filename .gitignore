@@ -10,3 +10,11 @@
 *.lai
 *.la
 *.a
+
+# Eclipse project files
+.cproject
+.project
+
+*.pro
+*.pro.*
+
