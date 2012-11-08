@@ -31,12 +31,19 @@ endif ()
 
 add_library ( ${PROJECT} ${SOURCES} )
 target_link_libraries ( ${PROJECT} ${OpenCV_USE_LIBS} )
+
+add_executable ( RoVi RoVi.cpp )
+target_link_libraries ( RoVi ${PROJECT} ${OpenCV_USE_LIBS} )
 #CMAKE_BINARY_DIR
-set ( LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/../lib )
-set (INCLUDE_DIRECTORY ${PROJECT_SOURCE_DIR}/../include)
-add_custom_target (project_include
-    COMMAND ${CMAKE_COMMAND} -E  # Create a working directory.
-        make_directory ${INCLUDE_DIRECTORY}
-    COMMAND ${CMAKE_COMMAND} -E  # Copy a build system in there.
-        copy ${HEADERS} ${INCLUDE_DIRECTORY})
+
+set ( LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib )
+#set ( LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/../lib )
+#set (INCLUDE_DIRECTORY ${PROJECT_SOURCE_DIR}/../include)
+
+
+#add_custom_target (project_include
+#    COMMAND ${CMAKE_COMMAND} -E  # Create a working directory.
+#        make_directory ${INCLUDE_DIRECTORY}
+#    COMMAND ${CMAKE_COMMAND} -E  # Copy a build system in there.
+#        copy ${HEADERS} ${INCLUDE_DIRECTORY})
         

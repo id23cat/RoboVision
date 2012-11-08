@@ -9,6 +9,8 @@
 #define REDPOINT_H_
 #include <opencv/cv.h>
 
+int ProcessImage(IplImage *inimg, IplImage *outimg);
+
 void FindRedPoint(IplImage *img, int *Max, CvPoint *maxPoint);
 void VideoRed(int argc, char* argv[]);
 void ImageRed(int argc, char* argv[]);

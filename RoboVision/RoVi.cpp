@@ -113,7 +113,7 @@
 //#include <opencv/highgui.h>
 //#include <stdlib.h>
 //#include <stdio.h>
-#include "include/RedPoint.h"
+#include "RedPoint.h"
 
 
 

@@ -3,7 +3,16 @@ project ( ${PROJECT}  )
 cmake_minimum_required ( VERSION 2.8 )
 
 add_subdirectory ( RoboVision )
-add_subdirectory ( RoboContol )
+#install(FILES "./RoboVision/lib/libRoboVision.a" DESTINATION "lib")
+#install(FILES RoboVision/RedPoint.h DESTINATION "include/")
+
+add_custom_command(TARGET RoboVision POST_BUILD        # Adds a post-build event to MyTest
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different  # which executes "cmake - E copy_if_different..."
+        "${PROJECT_SOURCE_DIR}/libs/test.dll"      # <--this is in-file
+        $<TARGET_FILE_DIR:MyTest>)                 # <--this is out-file path
+
+
+add_subdirectory ( RoboControl )
 
 #add_subdirectory ( src lib )
 

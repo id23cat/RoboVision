@@ -17,9 +17,49 @@
 //void CONTRASTCallback(int pos);
 //void SATURATIONCallback(int pos);
 //void MINTthresholdCallback(int pos);
+//int ProcessImage(void *inimg, int width, int height, void *outimg);
+
+void BRIGHTNESSCallback(int pos);
+void CONTRASTCallback(int pos);
+void SATURATIONCallback(int pos);
+void MINTthresholdCallback(int pos);
 
 CvCapture* capture;
 int MIN;
+
+#define WINNAME "capture"
+
+void OpenWindow(){
+    cvNamedWindow(WINNAME, CV_WINDOW_AUTOSIZE);
+//        cvNamedWindow("GAUSSIAN", CV_WINDOW_AUTOSIZE);
+//        cvNamedWindow("BILATERAL", CV_WINDOW_AUTOSIZE);
+
+    // показываем ползунок
+    int BRposition = 0;
+    int CTposition = 0;
+    int SNposition = 100;
+    int MINt = 90;
+    MIN = MINt;
+    cvCreateTrackbar("BRIGHTNESS", WINNAME, &BRposition, 100, BRIGHTNESSCallback);
+    cvCreateTrackbar("CONTRAST", WINNAME, &CTposition, 100, CONTRASTCallback);
+    cvCreateTrackbar("SATURATION", WINNAME, &SNposition, 100, SATURATIONCallback);
+    cvCreateTrackbar("Thrashold", WINNAME, &MINt, 200, MINTthresholdCallback);
+
+    // устанавливаем настройки видео по-умолчанию
+	cvSetCaptureProperty(capture, CV_CAP_PROP_BRIGHTNESS, BRposition/100);
+	cvSetCaptureProperty(capture, CV_CAP_PROP_CONTRAST, CTposition/100);
+	cvSetCaptureProperty(capture, CV_CAP_PROP_SATURATION, SNposition/100);
+
+}
+
+void ToWindow(IplImage* frame){
+	cvShowImage(WINNAME, frame);
+}
+
+void CloseWindow(){
+	cvDestroyWindow(WINNAME);
+}
+
 
 void VideoRed(int argc, char* argv[]){
     // получаем любую подключённую камеру
@@ -46,40 +86,24 @@ void VideoRed(int argc, char* argv[]){
     printf("[i] %.0f x %.0f\n", width, height );
 
     IplImage* frame=0;
-    IplImage* modified=0;
+    //IplImage* modified=0;
 
-    cvNamedWindow("capture", CV_WINDOW_AUTOSIZE);
-//        cvNamedWindow("GAUSSIAN", CV_WINDOW_AUTOSIZE);
-//        cvNamedWindow("BILATERAL", CV_WINDOW_AUTOSIZE);
-
-    // показываем ползунок
-    int BRposition = 0;
-    int CTposition = 0;
-    int SNposition = 100;
-    int MINt = 90;
-    MIN = MINt;
-    cvCreateTrackbar("BRIGHTNESS", "capture", &BRposition, 100, BRIGHTNESSCallback);
-    cvCreateTrackbar("CONTRAST", "capture", &CTposition, 100, CONTRASTCallback);
-    cvCreateTrackbar("SATURATION", "capture", &SNposition, 100, SATURATIONCallback);
-    cvCreateTrackbar("Thrashold", "capture", &MINt, 200, MINTthresholdCallback);
-
-    // устанавливаем настройки видео по-умолчанию
-	cvSetCaptureProperty(capture, CV_CAP_PROP_BRIGHTNESS, BRposition/100);
-	cvSetCaptureProperty(capture, CV_CAP_PROP_CONTRAST, CTposition/100);
-	cvSetCaptureProperty(capture, CV_CAP_PROP_SATURATION, SNposition/100);
 
     printf("[i] press Enter for capture image and Esc for quit!\n\n");
 
     int counter=0;
     char filename[512];
-    int max;
-    CvPoint maxP;
+//    int max;
+//    CvPoint maxP;
 
+	OpenWindow();
+//	fprintf(stderr, "cvCreateImageHeader(%d,%d)\n");
+//	IplImage *outframe = cvCreateImageHeader(cvSize(width, height), IPL_DEPTH_8U, 3);
     while (true) {
 		// получаем кадр
 		frame = cvQueryFrame(capture);
 		counter++;
-		if (counter == 1) {
+//		if (counter == 1) {
 			//		modified = cvCloneImage(frame);
 
 			//                cvSmooth(frame, modified, CV_GAUSSIAN, 3,3,15,15);
@@ -87,16 +111,46 @@ void VideoRed(int argc, char* argv[]){
 			//                cvSmooth(frame, modified, CV_BILATERAL, 3,3,30,30);
 			//                cvShowImage("BILATERAL", modified);
 
-			FindRedPoint(frame, &max, &maxP);
-			printf("MaxV = %d\n", max);
-			counter=0;
-		}
+//			FindRedPoint(frame, &max, &maxP);
+//			printf("MaxV = %d\n", max);
+//			switch(frame->depth){
+//			case IPL_DEPTH_8S:
+//				printf("depth = IPL_DEPTH_8S\n");
+//				break;
+//			case IPL_DEPTH_16S:
+//				printf("depth = IPL_DEPTH_16S\n");
+//				break;
+//			case IPL_DEPTH_32S:
+//				printf("depth = IPL_DEPTH_32S\n");
+//				break;
+//			case IPL_DEPTH_1U:
+//				printf("depth = IPL_DEPTH_1U\n");
+//				break;
+//			case IPL_DEPTH_8U:
+//				printf("depth = IPL_DEPTH_8U\n");
+//				break;
+//			case IPL_DEPTH_16U:
+//				printf("depth = IPL_DEPTH_16U\n");
+//				break;
+//			case IPL_DEPTH_32F:
+//				printf("depth = IPL_DEPTH_32F\n");
+//				break;
+//			}
+//			printf("chanels = %d\n", frame->nChannels);
+//
+//			counter=0;
+//		}
+//
+//		if(max > MIN)
+//			drawTarget(frame, maxP, 8);
 
-		if(max > MIN)
-			drawTarget(frame, maxP, 8);
-		cvShowImage("capture", frame);
 
-		// показываем
+		fprintf(stderr, "Start process\n");
+		ProcessImage(frame, frame);
+
+
+		// показываем			
+		ToWindow(frame);
 
 
 		char c = cvWaitKey(33);
@@ -109,11 +163,14 @@ void VideoRed(int argc, char* argv[]){
 			cvSaveImage(filename, frame);
 			counter++;
 		}
-		cvReleaseImage(&modified);
+
+//		free(outframe->imageData);
+//		cvReleaseImage(&frame);
 	}
 	// освобождаем ресурсы
+    cvReleaseImage(&frame);
 	cvReleaseCapture(&capture);
-	cvDestroyWindow("capture");
+	CloseWindow();
 	//        cvDestroyWindow("GAUSSIAN");
 	//        cvDestroyWindow("BILATERAL");
 }
@@ -161,6 +218,33 @@ void drawTarget(IplImage* img, CvPoint pt, int radius)
 #define RED(idx) idx+2
 #define GRN(idx) idx+1
 #define BLU(idx) idx+0
+
+int ProcessImage(IplImage *inimg, IplImage *outimg){
+
+//	CvMat mat;
+//	mat.height = height;
+//	mat.width = width;
+//	mat.step = width;
+//	mat.data.ptr = (uchar*) inimg;
+
+//	IplImage *frame = cvCreateImageHeader(cvSize(width,height), IPL_DEPTH_8U, 3);
+//	IplImage *outframe = cvCreateImageHeader(cvSize(width,height), IPL_DEPTH_8U, 3);
+////	frame = cvGetImage(&mat, frame);
+//
+////	IplImage *outframe = cvCloneImage(frame);
+//	cvSetImageData(frame, inimg, width);
+//	cvSetImageData(outframe, outimg, width);
+//	cvCopy(frame, outframe);
+	int max;
+	CvPoint maxP;
+	FindRedPoint(inimg, &max, &maxP);
+	if(max > MIN)
+		drawTarget(outimg, maxP, 8);
+
+	//outimg = (void*)outframe->imageData;
+
+	return 0;
+}
 
 void FindRedPoint(IplImage *img, int *Max, CvPoint *maxPoint){
 	int maxV=-255;
