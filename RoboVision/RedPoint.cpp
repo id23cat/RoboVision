@@ -19,6 +19,9 @@
 //void MINTthresholdCallback(int pos);
 //int ProcessImage(void *inimg, int width, int height, void *outimg);
 
+
+#define WINNAME "capture"
+
 void BRIGHTNESSCallback(int pos);
 void CONTRASTCallback(int pos);
 void SATURATIONCallback(int pos);
@@ -27,7 +30,6 @@ void MINTthresholdCallback(int pos);
 CvCapture* capture;
 int MIN;
 
-#define WINNAME "capture"
 
 void OpenWindow(){
     cvNamedWindow(WINNAME, CV_WINDOW_AUTOSIZE);
@@ -145,7 +147,7 @@ void VideoRed(int argc, char* argv[]){
 //			drawTarget(frame, maxP, 8);
 
 
-		fprintf(stderr, "Start process\n");
+//		fprintf(stderr, "Start process\n");
 		ProcessImage(frame, frame);
 
 
@@ -221,20 +223,7 @@ void drawTarget(IplImage* img, CvPoint pt, int radius)
 
 int ProcessImage(IplImage *inimg, IplImage *outimg){
 
-//	CvMat mat;
-//	mat.height = height;
-//	mat.width = width;
-//	mat.step = width;
-//	mat.data.ptr = (uchar*) inimg;
 
-//	IplImage *frame = cvCreateImageHeader(cvSize(width,height), IPL_DEPTH_8U, 3);
-//	IplImage *outframe = cvCreateImageHeader(cvSize(width,height), IPL_DEPTH_8U, 3);
-////	frame = cvGetImage(&mat, frame);
-//
-////	IplImage *outframe = cvCloneImage(frame);
-//	cvSetImageData(frame, inimg, width);
-//	cvSetImageData(outframe, outimg, width);
-//	cvCopy(frame, outframe);
 	int max;
 	CvPoint maxP;
 	FindRedPoint(inimg, &max, &maxP);
@@ -246,7 +235,7 @@ int ProcessImage(IplImage *inimg, IplImage *outimg){
 	return 0;
 }
 
-void FindRedPoint(IplImage *img, int *Max, CvPoint *maxPoint){
+void FindRedPointRGB(IplImage *img, int *Max, CvPoint *maxPoint){
 	int maxV=-255;
 	CvPoint maxP;
 	int val=0;
@@ -268,6 +257,32 @@ void FindRedPoint(IplImage *img, int *Max, CvPoint *maxPoint){
 	}
 	*Max = maxV;
 	*maxPoint = maxP;
+}
+
+void FindRedPointHSV(IplImage *img, int *Max, CvPoint *maxPoint){
+//	int maxV=-255;
+//	CvPoint maxP;
+//	int val=0;
+//
+//	IplImage* hsv = cvCreateImage( cvGetSize(img), IPL_DEPTH_8U, 3 );
+//
+////	for (int i = 0; i < img->height; i++) {
+////		for (int j = 0; j < img->width; j++) {
+////			unsigned char r = img->imageData[RED(IDX(i,j,img))];
+////			unsigned char g = img->imageData[GRN(IDX(i,j,img))];
+////			unsigned char b = img->imageData[BLU(IDX(i,j,img))];
+////
+////			val = r - g - b;
+////
+////			if (val > maxV) {
+////				maxV = val;
+////				maxP.y = i;
+////				maxP.x = j;
+////			}
+////		}
+////	}
+//	*Max = maxV;
+//	*maxPoint = maxP;
 }
 
 // функция-обработчик ползунка -

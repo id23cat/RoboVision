@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include <opencv2/video/tracking.hpp>
 #include "networker.h"
+#include <opencv/cv.h>
 
 namespace Ui {
     class MainWindow;
@@ -51,6 +52,8 @@ private:
     Networker *robot;
 protected:
     void keyPressEvent(QKeyEvent *event);
+//    IplImage* QImage2IplImage(QImage *qimg);
+//    QImage* IplImage2QImage(IplImage *iplImg);
 };
 
 #endif // MAINWINDOW_H

@@ -60,6 +60,22 @@ else ()
 	message ( "Unknown compiler" )
 endif ()
 
+##########################
+###	Vision libraries
+set(VISION RoboVision)
+set(VISIONLIB ${VISION})
+#link_directories ( ${CMAKE_BINARY_DIR}../RoboVision/lib )
+link_directories(${CMAKE_SOURCE_DIR}/../${VISION}/lib)
+include_directories(${CMAKE_SOURCE_DIR}/../${VISION})
+
+#target_link_libraries ( ${PROJECT}  ${VISIONLIB} )
+
+###	OpenCV libralies
+set ( OpenCV_USE_LIBS opencv_core opencv_imgproc opencv_highgui opencv_ml opencv_video opencv_features2d opencv_calib3d opencv_objdetect opencv_contrib opencv_legacy opencv_flann )
+find_package ( OpenCV )
+
+##########################
+
 source_group ("Header Files" FILES ${HEADERS})
 source_group ("Source Files" FILES ${SOURCES})
 source_group ("Generated Files" FILES ${MOC_SOURCES})
@@ -67,5 +83,5 @@ source_group ("Resource Files" FILES ${QRC_SOURCES})
 
 add_executable (${PROJECT} ${HEADERS} ${SOURCES} ${MOC_SOURCES} ${QRC_SOURCES} ${TRANSLATIONS} ${UI_HEADERS})
  
-target_link_libraries (${PROJECT} ${LIBRARIES} ${QT_LIBRARIES})
+target_link_libraries (${PROJECT} ${LIBRARIES} ${QT_LIBRARIES} ${VISIONLIB} ${OpenCV_USE_LIBS})
 
