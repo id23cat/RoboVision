@@ -40,16 +40,23 @@ MainWindow::MainWindow(QWidget *parent) :
 
     setFocusPolicy(Qt::StrongFocus);
 
-    grabber = new QImageGrabberMjpeg(this);
-    QUrl url("http://192.168.1.2:8080/?action=stream");
-    grabber->setUrl(url);
-    grabber->startGrabbing();
-    connect(grabber, SIGNAL(newImageGrabbed(QImage*)), this, SLOT(showOriginal(QImage*)));
+    StartGrabber();
 
     needToInit = true;
 
-    robot = new Networker(ui->IPline->text(), ui->Portline->text().toInt());
-//    robot = new Networker();
+//    robot = new Networker(ui->IPline->text(), ui->Portline->text().toInt());
+    robot = new Networker(ui->IPline->text(), ui->Portline->text().toUInt());
+}
+
+
+void MainWindow::StartGrabber()
+{
+    grabber = new QImageGrabberMjpeg(this);
+    QUrl url("http://192.168.1.2:8080/?action=stream");
+//    grabber->
+    grabber->setUrl(url);
+    grabber->startGrabbing();
+    connect(grabber, SIGNAL(newImageGrabbed(QImage*)), this, SLOT(showOriginal(QImage*)));
 }
 
 void MainWindow::showOriginal(QImage *img)
@@ -79,47 +86,65 @@ MainWindow::~MainWindow()
 void MainWindow::on_ReconnectBtn_clicked()
 {
     robot->Reconnect(ui->IPline->text(), ui->Portline->text().toInt());
+    disconnect(grabber);
+    delete grabber;
+    StartGrabber();
 }
 
 void MainWindow::on_toolButtonUp_clicked()
 {
-    robot->Write("MF1M");
+    qDebug() << "UP KEY";
+    robot->Write(MW_FORWARD);
 }
 
 void MainWindow::on_toolButtonLeft_clicked()
 {
-    robot->Write("RL1R");
+    qDebug() << "LEFT KEY";
+    robot->Write(RT_LEFT);
 }
 
 void MainWindow::on_toolButtonDown_clicked()
 {
-    robot->Write("ST1S");
+    qDebug() << "DOWN KEY";
+    robot->Write(MW_BACKWARD);
 }
 
 void MainWindow::on_toolButtonRight_clicked()
 {
-    robot->Write("RR1R");
+    qDebug() << "RIGHT KEY";
+    robot->Write(RT_RIGHT);
 }
 
 void MainWindow::keyPressEvent(QKeyEvent *event){
     switch (event->key()) {
     case Qt::Key_Up:
-        robot->Write("MF1M");
+        on_toolButtonUp_clicked();
         break;
     case Qt::Key_Down:
-        robot->Write("ST1S");
+        on_toolButtonDown_clicked();
         break;
     case Qt::Key_Left:
-        robot->Write("RL1R");
+        on_toolButtonLeft_clicked();
         break;
     case Qt::Key_Right:
-        robot->Write("RR1R");
+        on_toolButtonRight_clicked();
         break;
     default:
         QWidget::keyPressEvent(event);
     }
 }
 
+void MainWindow::on_toolButtonSend_clicked()
+{
+    robot->Write( ui->commandLine->displayText() );
+    ui->commandLine->clear();
+}
+
+void MainWindow::on_commandLine_returnPressed()
+{
+    robot->Write( ui->commandLine->displayText() );
+    ui->commandLine->clear();
+}
 
 //IplImage* MainWindow::QImage2IplImage(QImage *qimg)
 //{
@@ -174,3 +199,7 @@ void MainWindow::keyPressEvent(QKeyEvent *event){
 //    return qimg;
 
 //}
+
+
+
+

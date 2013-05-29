@@ -20,7 +20,8 @@
 //int ProcessImage(void *inimg, int width, int height, void *outimg);
 
 
-#define WINNAME "capture"
+#define WINNAME (char*)"capture"
+#define HSVWIN (char*)"hsvwin"
 
 void BRIGHTNESSCallback(int pos);
 void CONTRASTCallback(int pos);
@@ -33,29 +34,31 @@ int MIN;
 
 void OpenWindow(){
     cvNamedWindow(WINNAME, CV_WINDOW_AUTOSIZE);
+    cvNamedWindow(HSVWIN, CV_WINDOW_AUTOSIZE);
+    cvMoveWindow(HSVWIN, 500, 0);
 //        cvNamedWindow("GAUSSIAN", CV_WINDOW_AUTOSIZE);
 //        cvNamedWindow("BILATERAL", CV_WINDOW_AUTOSIZE);
 
-    // показываем ползунок
-    int BRposition = 0;
-    int CTposition = 0;
-    int SNposition = 100;
-    int MINt = 90;
-    MIN = MINt;
-    cvCreateTrackbar("BRIGHTNESS", WINNAME, &BRposition, 100, BRIGHTNESSCallback);
-    cvCreateTrackbar("CONTRAST", WINNAME, &CTposition, 100, CONTRASTCallback);
-    cvCreateTrackbar("SATURATION", WINNAME, &SNposition, 100, SATURATIONCallback);
-    cvCreateTrackbar("Thrashold", WINNAME, &MINt, 200, MINTthresholdCallback);
-
-    // устанавливаем настройки видео по-умолчанию
-	cvSetCaptureProperty(capture, CV_CAP_PROP_BRIGHTNESS, BRposition/100);
-	cvSetCaptureProperty(capture, CV_CAP_PROP_CONTRAST, CTposition/100);
-	cvSetCaptureProperty(capture, CV_CAP_PROP_SATURATION, SNposition/100);
+//    // показываем ползунок
+//    int BRposition = 0;
+//    int CTposition = 0;
+//    int SNposition = 100;
+//    int MINt = 90;
+//    MIN = MINt;
+//    cvCreateTrackbar("BRIGHTNESS", WINNAME, &BRposition, 100, BRIGHTNESSCallback);
+//    cvCreateTrackbar("CONTRAST", WINNAME, &CTposition, 100, CONTRASTCallback);
+//    cvCreateTrackbar("SATURATION", WINNAME, &SNposition, 100, SATURATIONCallback);
+//    cvCreateTrackbar("Thrashold", WINNAME, &MINt, 200, MINTthresholdCallback);
+//
+//    // устанавливаем настройки видео по-умолчанию
+//	cvSetCaptureProperty(capture, CV_CAP_PROP_BRIGHTNESS, BRposition/100);
+//	cvSetCaptureProperty(capture, CV_CAP_PROP_CONTRAST, CTposition/100);
+//	cvSetCaptureProperty(capture, CV_CAP_PROP_SATURATION, SNposition/100);
 
 }
 
-void ToWindow(IplImage* frame){
-	cvShowImage(WINNAME, frame);
+void ToWindow(IplImage* frame, char *name=WINNAME){
+	cvShowImage(name, frame);
 }
 
 void CloseWindow(){
@@ -101,6 +104,7 @@ void VideoRed(int argc, char* argv[]){
 	OpenWindow();
 //	fprintf(stderr, "cvCreateImageHeader(%d,%d)\n");
 //	IplImage *outframe = cvCreateImageHeader(cvSize(width, height), IPL_DEPTH_8U, 3);
+	RedPoint redPoint(width, height);
     while (true) {
 		// получаем кадр
 		frame = cvQueryFrame(capture);
@@ -148,7 +152,10 @@ void VideoRed(int argc, char* argv[]){
 
 
 //		fprintf(stderr, "Start process\n");
-		ProcessImage(frame, frame);
+
+
+//		ProcessImage(frame, frame);
+		redPoint.ProcessImage(frame);
 
 
 		// показываем			
@@ -227,7 +234,7 @@ int ProcessImage(IplImage *inimg, IplImage *outimg){
 	int max;
 	CvPoint maxP;
 	FindRedPoint(inimg, &max, &maxP);
-	if(max > MIN)
+//	if(max > MIN)
 		drawTarget(outimg, maxP, 8);
 
 	//outimg = (void*)outframe->imageData;
@@ -260,29 +267,39 @@ void FindRedPointRGB(IplImage *img, int *Max, CvPoint *maxPoint){
 }
 
 void FindRedPointHSV(IplImage *img, int *Max, CvPoint *maxPoint){
-//	int maxV=-255;
-//	CvPoint maxP;
-//	int val=0;
-//
-//	IplImage* hsv = cvCreateImage( cvGetSize(img), IPL_DEPTH_8U, 3 );
-//
-////	for (int i = 0; i < img->height; i++) {
-////		for (int j = 0; j < img->width; j++) {
-////			unsigned char r = img->imageData[RED(IDX(i,j,img))];
-////			unsigned char g = img->imageData[GRN(IDX(i,j,img))];
-////			unsigned char b = img->imageData[BLU(IDX(i,j,img))];
-////
-////			val = r - g - b;
-////
-////			if (val > maxV) {
-////				maxV = val;
-////				maxP.y = i;
-////				maxP.x = j;
-////			}
-////		}
-////	}
-//	*Max = maxV;
-//	*maxPoint = maxP;
+	CvSize size = cvGetSize(img);
+	IplImage *hsv = cvCreateImage(size, IPL_DEPTH_8U, 3);
+	IplImage *h_plane = cvCreateImage(size, IPL_DEPTH_8U, 1);
+	IplImage *s_plane = cvCreateImage(size, IPL_DEPTH_8U, 1);
+	IplImage *v_plane = cvCreateImage(size, IPL_DEPTH_8U, 1);
+	IplImage *hsv_and = cvCreateImage( size, IPL_DEPTH_8U, 1 );
+
+	//  конвертируем в HSV
+	cvCvtColor(img, hsv, CV_BGR2HSV);
+	cvCvtPixToPlane(hsv, h_plane, s_plane, v_plane, 0);
+
+	cvInRangeS(h_plane, cvScalar(Hmin), cvScalar(Hmax), h_plane);
+	cvInRangeS(s_plane, cvScalar(Smin), cvScalar(Smax), s_plane);
+	cvInRangeS(v_plane, cvScalar(Vmin), cvScalar(Vmax), v_plane);
+
+	// складываем
+	cvAnd(h_plane, s_plane, hsv_and);
+	cvAnd(hsv_and, v_plane, hsv_and);
+	ToWindow(hsv_and, HSVWIN);
+	double min;
+	double max;
+	CvPoint pMin;
+	CvPoint pMax;
+
+	cvMinMaxLoc(hsv_and, &min, &max, &pMin, &pMax);
+	cvReleaseImage(&hsv);
+	cvReleaseImage(&h_plane);
+	cvReleaseImage(&s_plane);
+	cvReleaseImage(&v_plane);
+	cvReleaseImage(&hsv_and);
+	*Max = max;
+	*maxPoint = pMax;
+//	return pMax;
 }
 
 // функция-обработчик ползунка -
@@ -306,4 +323,90 @@ void SATURATIONCallback(int pos) {
 
 void MINTthresholdCallback(int pos) {
 	MIN = pos;
+}
+
+
+RedPoint::~RedPoint(){
+	cvReleaseImage(&img3ch);
+	cvReleaseImage(&chnl1);
+	cvReleaseImage(&chnl2);
+	cvReleaseImage(&chnl3);
+	cvReleaseImage(&chnl_and);
+}
+
+RedPoint::RedPoint(int width, int height){
+	size = cvSize(width, height);
+	img3ch = cvCreateImage( size, IPL_DEPTH_8U, 3 );
+	chnl1 = cvCreateImage( size, IPL_DEPTH_8U, 1 );
+	chnl2 = cvCreateImage( size, IPL_DEPTH_8U, 1 );
+	chnl3 = cvCreateImage( size, IPL_DEPTH_8U, 1 );
+	chnl_and = cvCreateImage( size, IPL_DEPTH_8U, 1 );
+}
+
+CvPoint RedPoint::ProcessImage(IplImage *src, IplImage *dst){
+	CvPoint pMax;
+	if(!dst){
+		cvCopy(src, img3ch);
+		pMax = FindRedPoint(img3ch);
+		drawTarget(src, pMax, 8);
+
+	}else{
+		cvCopy(src, dst);
+		pMax = FindRedPoint(dst);
+		drawTarget(dst, pMax, 8);
+	}
+
+	return pMax;
+
+}
+
+CvPoint RedPoint::FindRedPointHSV(IplImage *img){
+	IplImage* hsv = img;
+	IplImage* h_plane = chnl1;
+	IplImage* s_plane = chnl2;//		cvAdaptiveThreshold(h_plane, h_range, Hmax,
+	//				CV_ADAPTIVE_THRESH_MEAN_C, CV_THRESH_TOZERO_INV);
+	//		cvAdaptiveThreshold(h_range, h_range, Hmin,
+	//				CV_ADAPTIVE_THRESH_MEAN_C, CV_THRESH_TOZERO);
+	//
+	//		cvAdaptiveThreshold(s_plane, s_range, Smax,
+	//				CV_ADAPTIVE_THRESH_MEAN_C, CV_THRESH_TOZERO_INV);
+	//		cvAdaptiveThreshold(s_range, s_range, Smin,
+	//				CV_ADAPTIVE_THRESH_MEAN_C, CV_THRESH_TOZERO);
+	//				//		cvAdaptiveThreshold(h_plane, h_range, Hmax,
+	//				CV_ADAPTIVE_THRESH_MEAN_C, CV_THRESH_TOZERO_INV);
+	//		cvAdaptiveThreshold(h_range, h_range, Hmin,
+	//				CV_ADAPTIVE_THRESH_MEAN_C, CV_THRESH_TOZERO);
+	//
+	//		cvAdaptiveThreshold(s_plane, s_range, Smax,
+	//				CV_ADAPTIVE_THRESH_MEAN_C, CV_THRESH_TOZERO_INV);
+	//		cvAdaptiveThreshold(s_range, s_range, Smin,
+	//				CV_ADAPTIVE_THRESH_MEAN_C, CV_THRESH_TOZERO);
+	//
+	//		cvAdaptiveThreshold(v_plane, v_range, Vmax,
+	//				CV_ADAPTIVE_THRESH_MEAN_C, CV_THRESH_TOZERO_INV);
+	//		cvAdaptiveThreshold(v_range, v_range, Vmin,
+	//				CV_ADAPTIVE_THRESH_MEAN_C, CV_THRESH_TOZERO);
+	//		cvAdaptiveThreshold(v_plane, v_range, Vmax,
+	//				CV_ADAPTIVE_THRESH_MEAN_C, CV_THRESH_TOZERO_INV);
+	//		cvAdaptiveThreshold(v_range, v_range, Vmin,
+	//				CV_ADAPTIVE_THRESH_MEAN_C, CV_THRESH_TOZERO);wwwwww
+	IplImage* v_plane = chnl3;
+	//  конвертируем в HSV
+	cvCvtColor( img, hsv, CV_BGR2HSV );
+	cvCvtPixToPlane( hsv, h_plane, s_plane, v_plane, 0 );
+
+	cvInRangeS(h_plane, cvScalar(Hmin), cvScalar(Hmax), h_plane);
+	cvInRangeS(s_plane, cvScalar(Smin), cvScalar(Smax), s_plane);
+	cvInRangeS(v_plane, cvScalar(Vmin), cvScalar(Vmax), v_plane);
+
+	// складываем
+	cvAnd(h_plane, s_plane, chnl_and);
+	cvAnd(chnl_and, v_plane, chnl_and);
+	double min;
+	double max;
+	CvPoint pMin;
+	CvPoint pMax;
+
+	cvMinMaxLoc(chnl_and,&min, &max, &pMin, &pMax);
+	return pMax;
 }

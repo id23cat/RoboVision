@@ -13,19 +13,34 @@ Networker::Networker():ip("127.0.0.1"), port(3000)
 
     qDebug()<< "Connect " <<ip <<":" <<port;
     tcpSock->connectToHost(ip, port);
+    if( tcpSock->state() != QAbstractSocket::ConnectedState){
+        connected = NOTCONNECTED;
+        return;
+    }else
+        connected = CONNECTED;
 }
 
 Networker::Networker(QString ipstr, int porti):ip(ipstr), port(porti)
 {
     tcpSock = new QTcpSocket(this);
+    qDebug()<< "Connect " <<ip <<":" <<port;
 
     connect(tcpSock, SIGNAL(readyRead()), this, SLOT(read()));
     connect(tcpSock, SIGNAL(error(QAbstractSocket::SocketError)),
             this, SLOT(displayError(QAbstractSocket::SocketError)));
 
-    connect(tcpSock, SIGNAL(disconnected()), this, SLOT(disconnected()));
+//    connect(tcpSock, SIGNAL(disconnected()), this, SLOT(disconnected()));
+    connect(tcpSock, SIGNAL(connected()), this, SLOT(dispConnected()));
 
     tcpSock->connectToHost(ip, port);
+
+    qDebug() << tcpSock->state();
+    if( tcpSock->state() != QAbstractSocket::ConnectedState){
+        connected = NOTCONNECTED;
+        return;
+    }else
+        connected = CONNECTED;
+    read();
 }
 
 Networker::~Networker()
@@ -37,6 +52,7 @@ Networker::~Networker()
 void Networker::Reconnect(QString ipstr, int porti)
 {
     tcpSock->disconnectFromHost();
+    connected = NOTCONNECTED;
 
     ip = ipstr;
     port = porti;
@@ -44,6 +60,13 @@ void Networker::Reconnect(QString ipstr, int porti)
     qDebug()<< "Reconnect " <<ip <<":" <<port;
 
     tcpSock->connectToHost(ip, port);
+    if( tcpSock->state() != QAbstractSocket::ConnectedState){
+        connected = NOTCONNECTED;
+        return;
+    }else
+        connected = CONNECTED;
+
+    read();
 }
 
 void Networker::Write(QString msg)
@@ -56,13 +79,15 @@ void Networker::Write(QString msg)
 
     qDebug() << msg /*<< ":"<<block.data()*/;
     tcpSock->write(QByteArray(msg.toAscii()));
+    read();
 
 }
 
 void Networker::read()
 {
-    QMessageBox::information(NULL, tr("!!!"),
-                             tr("Read"));
+//    QMessageBox::information(NULL, tr("!!!"), tr("Read"));
+    QTcpSocket* sock = (QTcpSocket*)sender();
+    qDebug() << sock->readAll();
     QDataStream in(tcpSock);
     in.setVersion(QDataStream::Qt_4_0);
 
@@ -72,6 +97,12 @@ void Networker::read()
  {
      QMessageBox::information(NULL, tr("Robo"),
                               tr("Disconnected"));
+ }
+
+ void Networker::dispConnected()
+ {
+     QMessageBox::information(NULL, tr("Robo"),
+                              tr("Connected"));
  }
 
 

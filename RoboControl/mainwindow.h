@@ -6,6 +6,16 @@
 #include "networker.h"
 #include <opencv/cv.h>
 
+#define MW_FORWARD "q"
+#define MW_BACKWARD "w"
+#define RT_LEFT "e"
+#define RT_RIGHT "r"
+
+//#define FORWARD "MF1M"
+//#define BACKWARD "ST1S"
+//#define ROTATE_LEFT "RL1R"
+//#define ROTATE_RIGHT "RR1R"
+
 namespace Ui {
     class MainWindow;
 }
@@ -34,6 +44,10 @@ private slots:
 
     void on_toolButtonRight_clicked();
 
+    void on_toolButtonSend_clicked();
+
+    void on_commandLine_returnPressed();
+
 private:
     Ui::MainWindow *ui;
     QImageGrabberMjpeg *grabber;
@@ -52,6 +66,7 @@ private:
     Networker *robot;
 protected:
     void keyPressEvent(QKeyEvent *event);
+    void StartGrabber();
 //    IplImage* QImage2IplImage(QImage *qimg);
 //    QImage* IplImage2QImage(IplImage *iplImg);
 };

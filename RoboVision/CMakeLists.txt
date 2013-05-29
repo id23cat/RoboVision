@@ -5,6 +5,7 @@ cmake_minimum_required ( VERSION 2.8 )
 
 set ( OpenCV_USE_LIBS opencv_core opencv_imgproc opencv_highgui opencv_ml opencv_video opencv_features2d opencv_calib3d opencv_objdetect opencv_contrib opencv_legacy opencv_flann )
 find_package ( OpenCV )
+
 set ( SOURCES RedPoint.cpp )
 set ( HEADERS RedPoint.h )
 
@@ -34,9 +35,13 @@ target_link_libraries ( ${PROJECT} ${OpenCV_USE_LIBS} )
 
 add_executable ( RoVi RoVi.cpp )
 target_link_libraries ( RoVi ${PROJECT} ${OpenCV_USE_LIBS} )
-#CMAKE_BINARY_DIR
 
 set ( LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib )
+#set ( LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/lib )
+
+
+
+
 #set ( LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/../lib )
 #set (INCLUDE_DIRECTORY ${PROJECT_SOURCE_DIR}/../include)
 
